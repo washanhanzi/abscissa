@@ -112,11 +112,11 @@ pub trait Application: Default + Sized + 'static {
         &mut self,
         command: &Self::Cmd,
     ) -> Result<Vec<Box<dyn Component<Self>>>, FrameworkError> {
-        let terminal = Terminal::new(self.term_colors(command));
+        // let terminal = Terminal::new(self.term_colors(command));
         let tracing = Tracing::new(self.tracing_config(command), self.term_colors(command))
             .expect("tracing subsystem failed to initialize");
 
-        Ok(vec![Box::new(terminal), Box::new(tracing)])
+        Ok(vec![Box::new(tracing)])
     }
 
     /// Load configuration from the given path.

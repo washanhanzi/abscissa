@@ -1,19 +1,19 @@
 [package]
-name         = "abscissa_core"
-description  = """
+name = "abscissa_core"
+description = """
 Application microframework with support for command-line option parsing,
 configuration, error handling, logging, and terminal interactions.
 This crate contains the framework's core functionality.
 """
-version      = "0.8.1"
-license      = "Apache-2.0"
-authors      = ["Tony Arcieri <tony@iqlusion.io>"]
-homepage     = "https://github.com/iqlusioninc/abscissa/"
-repository   = "https://github.com/iqlusioninc/abscissa/tree/main/core/"
-readme       = "../README.md"
-categories   = ["command-line-interface", "config", "rust-patterns"]
-keywords     = ["abscissa", "cli", "application", "framework", "service"]
-edition      = "2021"
+version = "0.8.1"
+license = "Apache-2.0"
+authors = ["Tony Arcieri <tony@iqlusion.io>"]
+homepage = "https://github.com/iqlusioninc/abscissa/"
+repository = "https://github.com/iqlusioninc/abscissa/tree/main/core/"
+readme = "../README.md"
+categories = ["command-line-interface", "config", "rust-patterns"]
+keywords = ["abscissa", "cli", "application", "framework", "service"]
+edition = "2021"
 rust-version = "1.74"
 
 [dependencies]
@@ -44,31 +44,18 @@ default-features = false
 features = ["fmt", "env-filter", "ansi", "smallvec", "tracing-log"]
 
 [features]
-default = [
-    "application",
-    "secrets",
-    "testing",
-]
+default = ["application", "secrets", "testing"]
 application = [
     "arc-swap",
     "config",
     "trace",
     "options",
     "semver/serde",
-    "terminal"
-]
-config = [
-    "secrets",
-    "serde",
     "terminal",
-    "toml"
 ]
+config = ["secrets", "serde", "terminal", "toml"]
 options = ["clap"]
 secrets = ["secrecy"]
-terminal = ["color-eyre", "termcolor"]
+terminal = ["color-eyre", "termcolor", "tracing"]
 testing = ["regex", "wait-timeout"]
-trace = [
-    "tracing",
-    "tracing-log",
-    "tracing-subscriber"
-]
+trace = ["tracing", "tracing-log", "tracing-subscriber"]

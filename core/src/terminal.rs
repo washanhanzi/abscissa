@@ -5,6 +5,7 @@ pub mod component;
 #[macro_use]
 pub mod status;
 pub mod streams;
+pub use tracing;
 
 pub use self::streams::Streams;
 pub use termcolor::{Color, ColorChoice, StandardStream};

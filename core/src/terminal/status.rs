@@ -31,11 +31,6 @@
 //! status_attr_err!("error", "yep");
 //! ```
 
-use super::{stderr, stdout};
-use crate::FrameworkError;
-use std::io::Write;
-use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
-
 /// Print a success status message (in green if colors are enabled)
 ///
 /// ```ignore
@@ -45,13 +40,7 @@ use termcolor::{Color, ColorSpec, StandardStream, WriteColor};
 #[macro_export]
 macro_rules! status_ok {
     ($status:expr, $msg:expr) => {
-        $crate::terminal::status::Status::new()
-            .justified()
-            .bold()
-            .color($crate::terminal::Color::Green)
-            .status($status)
-            .print_stdout($msg)
-            .unwrap();
+        $crate::terminal::tracing::info!("{}: {}", $status, $msg);
     };
     ($status:expr, $fmt:expr, $($arg:tt)+) => {
         $crate::status_ok!($status, format!($fmt, $($arg)+));
@@ -67,16 +56,13 @@ macro_rules! status_ok {
 #[macro_export]
 macro_rules! status_info {
     ($status:expr, $msg:expr) => {
-        $crate::terminal::status::Status::new()
-            .justified()
-            .bold()
-            .color($crate::terminal::Color::Cyan)
-            .status($status)
-            .print_stdout($msg)
-            .unwrap();
+        $crate::terminal::tracing::info!("{}: {}", $status, $msg);
     };
     ($status:expr, $fmt:expr, $($arg:tt)+) => {
-        $crate::status_info!($status, format!($fmt, $($arg)+));
+        //the error comes here
+        //cant find tracing in the list of imported crates
+        //but i already imported tracing
+        $crate::status_ok!($status, format!($fmt, $($arg)+));
     };
 }
 
@@ -89,12 +75,7 @@ macro_rules! status_info {
 #[macro_export]
 macro_rules! status_warn {
     ($msg:expr) => {
-        $crate::terminal::status::Status::new()
-            .bold()
-            .color($crate::terminal::Color::Yellow)
-            .status("warning:")
-            .print_stdout($msg)
-            .unwrap();
+        $crate::terminal::tracing::warn!("{}: {}", "warning:", $msg);
     };
     ($fmt:expr, $($arg:tt)+) => {
         $crate::status_warn!(format!($fmt, $($arg)+));
@@ -110,12 +91,7 @@ macro_rules! status_warn {
 #[macro_export]
 macro_rules! status_err {
     ($msg:expr) => {
-        $crate::terminal::status::Status::new()
-            .bold()
-            .color($crate::terminal::Color::Red)
-            .status("error:")
-            .print_stderr($msg)
-            .unwrap();
+        $crate::terminal::tracing::error!("{}: {}", "error:", $msg);
     };
     ($fmt:expr, $($arg:tt)+) => {
         $crate::status_err!(format!($fmt, $($arg)+));
@@ -139,12 +115,7 @@ macro_rules! status_attr_ok {
         };
 
 
-        $crate::terminal::status::Status::new()
-            .bold()
-            .color($crate::terminal::Color::Green)
-            .status(attr_delimited)
-            .print_stdout($msg)
-            .unwrap();
+        $crate::tracing::info!("{}: {}", attr_delimited, $msg);
     };
     ($attr: expr, $fmt:expr, $($arg:tt)+) => {
         $crate::status_attr_ok!($attr, format!($fmt, $($arg)+));
@@ -168,107 +139,9 @@ macro_rules! status_attr_err {
         };
 
 
-        $crate::terminal::status::Status::new()
-            .bold()
-            .color($crate::terminal::Color::Red)
-            .status(attr_delimited)
-            .print_stdout($msg)
-            .unwrap();
+        $crate::tracing::error!("{}: {}", attr_delimited, $msg);
     };
     ($attr: expr, $fmt:expr, $($arg:tt)+) => {
         $crate::status_attr_err!($attr, format!($fmt, $($arg)+));
-    }
-}
-
-/// Status message builder
-#[derive(Clone, Debug, Default)]
-pub struct Status {
-    /// Should the status be justified?
-    justified: bool,
-
-    /// Should colors be bold?
-    bold: bool,
-
-    /// Color in which status should be displayed
-    color: Option<Color>,
-
-    /// Prefix of the status message (e.g. `Success`)
-    status: Option<String>,
-}
-
-impl Status {
-    /// Create a new status message with default settings
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Justify status on display
-    pub fn justified(mut self) -> Self {
-        self.justified = true;
-        self
-    }
-
-    /// Make colors bold
-    pub fn bold(mut self) -> Self {
-        self.bold = true;
-        self
-    }
-
-    /// Set the colors used to display this message
-    pub fn color(mut self, c: Color) -> Self {
-        self.color = Some(c);
-        self
-    }
-
-    /// Set a status message to display
-    pub fn status<S>(mut self, msg: S) -> Self
-    where
-        S: ToString,
-    {
-        self.status = Some(msg.to_string());
-        self
-    }
-
-    /// Print the given message to stdout
-    pub fn print_stdout<S>(self, msg: S) -> Result<(), FrameworkError>
-    where
-        S: AsRef<str>,
-    {
-        self.print(stdout(), msg)
-    }
-
-    /// Print the given message to stderr
-    pub fn print_stderr<S>(self, msg: S) -> Result<(), FrameworkError>
-    where
-        S: AsRef<str>,
-    {
-        self.print(stderr(), msg)
-    }
-
-    /// Print the given message
-    fn print<S>(self, stream: &StandardStream, msg: S) -> Result<(), FrameworkError>
-    where
-        S: AsRef<str>,
-    {
-        let mut s = stream.lock();
-        s.reset()?;
-        s.set_color(ColorSpec::new().set_fg(self.color).set_bold(self.bold))?;
-
-        if let Some(status) = self.status {
-            if self.justified {
-                write!(s, "{:>12}", status)?;
-            } else {
-                write!(s, "{}", status)?;
-            }
-        }
-
-        s.reset()?;
-        let msg = msg.as_ref();
-        if !msg.is_empty() {
-            writeln!(s, " {}", msg)?;
-        }
-        s.flush()?;
-
-        Ok(())
     }
 }
